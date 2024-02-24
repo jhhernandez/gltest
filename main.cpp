@@ -188,6 +188,12 @@ void createShaders()
     glLinkProgram(shaderProgram);
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
 
+    if(!success)
+    {
+        glGetProgramInfoLog(shaderProgram, logSize, nullptr, infoLog);
+        cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED:" << infoLog << endl;
+    }
+
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 }
