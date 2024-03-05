@@ -13,7 +13,7 @@
 using std::cout;
 using std::endl;
 
-bool processInput();
+bool processInput(const Shader& shader);
 
 const char* TITLE = "LearnOpenGL";
 
@@ -115,8 +115,8 @@ int main()
     glGenTextures(1, &texture1);
 
     glBindTexture(GL_TEXTURE_2D, texture1);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -159,10 +159,10 @@ int main()
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     shader.use();
     glUniform1i(glGetUniformLocation(shader.ID, "texture1"), 0);
-    // or set it via the texture class
     shader.setInt("texture2", 1);
+    shader.setFloat("mixPercentage", 0.2);
 
-    while (!processInput())
+    while (!processInput(shader))
     {
         // clear screen
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -196,20 +196,31 @@ int main()
     return 0;
 }
 
-bool processInput()
+bool processInput(const Shader& shader)
 {
     SDL_Event e;
     bool quit = false;
+    GLfloat mix;
 
     while(SDL_PollEvent(&e))
     {
+        mix = shader.getFloat("mixPercentage");
+
         switch (e.type)
         {
             case SDL_KEYDOWN:
-                if (e.key.keysym.sym != SDLK_ESCAPE)
-                {
-                    break;
+                switch (e.key.keysym.sym) {
+                    case SDLK_ESCAPE:
+                        quit = true;
+                        break;
+                    case SDLK_UP:
+                        shader.setFloat("mixPercentage", mix >= 1.0 ? 1.0 : mix + 0.1);
+                        break;
+                    case SDLK_DOWN:
+                        shader.setFloat("mixPercentage", mix <= 0.1 ? 0.0 : mix - 0.1);
+                        break;
                 }
+                break;
             case SDL_QUIT:
                 quit = true;
                 break;

@@ -99,19 +99,44 @@ public:
       glDeleteShader(vertex);
       glDeleteShader(fragment);
     }
+
     // use/activate the shader
     void use() {
        glUseProgram(ID);
     }
+
     // utility uniform functions
-    void setBool(const string &name, bool value) const
+    bool getBool(const string& name) const
     {
-        glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
+        int value;
+        glGetUniformiv(ID, glGetUniformLocation(ID, name.c_str()), &value);
+        return static_cast<bool>(value);
     }
-    void setInt(const string &name, int value) const
+
+    int getInt(const string& name) const
+    {
+        int value;
+        glGetUniformiv(ID, glGetUniformLocation(ID, name.c_str()), &value);
+        return value;
+    }
+
+    float getFloat(const string& name) const
+    {
+        float value;
+        glGetUniformfv(ID, glGetUniformLocation(ID, name.c_str()), &value);
+        return value;
+    }
+
+    void setBool(const string& name, bool value) const
+    {
+        glUniform1i(glGetUniformLocation(ID, name.c_str()), static_cast<int>(value));
+    }
+
+    void setInt(const string& name, int value) const
     {
         glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
     }
+
     void setFloat(const string &name, float value) const
     {
         glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
