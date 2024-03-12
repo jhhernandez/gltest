@@ -7,6 +7,10 @@
 #include <string>
 #include <iostream>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 using std::string;
 using std::ifstream;
 using std::cout;
@@ -127,6 +131,20 @@ public:
         return value;
     }
 
+    glm::vec4 getVec4(const string& name) const
+    {
+        GLfloat value[4];
+        glGetUniformfv(ID, glGetUniformLocation(ID, name.c_str()), value);
+        return glm::make_vec4(value);
+    }
+
+    glm::mat4 getMat4(const string& name) const
+    {
+        GLfloat value[16];
+        glGetUniformfv(ID, glGetUniformLocation(ID, name.c_str()), value);
+        return glm::make_mat4(value);
+    }
+
     void setBool(const string& name, bool value) const
     {
         glUniform1i(glGetUniformLocation(ID, name.c_str()), static_cast<int>(value));
@@ -140,6 +158,11 @@ public:
     void setFloat(const string &name, float value) const
     {
         glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
+    }
+
+    void setMat4(const string& name, const glm::mat4& mat) const
+    {
+        glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(mat));
     }
 };
 
