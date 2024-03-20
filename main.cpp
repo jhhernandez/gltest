@@ -13,15 +13,28 @@
 
 #include "src/shader.h"
 #include "src/load_texture.cpp"
+#include "src/camera.h"
 
 #include "src/cube.h"
 
 using std::cout;
 using std::endl;
 
-bool processInput(const Shader& shader);
+bool processInput(const Shader& shader, Camera& camera);
 
 const char* TITLE = "LearnOpenGL";
+
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+
+float deltaTime = 0.0f; // Time between current frame and last frame
+float lastFrame = 0.0f; // Time of last frame
+
+float yaw = -90.0f;
+float pitch = 0.0f;
+
+float fov = 45.0f;
 
 int main()
 {
@@ -78,7 +91,9 @@ int main()
         return 1;
     }
 
+    SDL_SetRelativeMouseMode(SDL_TRUE);
     Shader shader("../shaders/tex_shader.vs", "../shaders/tex_shader.fs");
+    Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
     // Shader shader2("../shaders/tex_shader.vs", "../shaders/tex_shader.fs");
 
     // unsigned int indices[] = {
@@ -152,13 +167,10 @@ int main()
     shader.setInt("texture2", 1);
 
     // glm::mat4 model = glm::rotate(glm::mat4(1.0f), glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
 
     // shader.setMat4("model", model);
-    shader.setMat4("view", view);
-    shader.setMat4("projection", projection);
-
+    shader.setMat4("view", camera.GetViewMatrix());
+    shader.setMat4("projection", glm::perspective(glm::radians(fov), 800.0f / 600.0f, 0.1f, 100.0f));
     shader.setFloat("mixPercentage", 0.2f);
 
     glActiveTexture(GL_TEXTURE0);
@@ -177,15 +189,18 @@ int main()
     // glBindTexture(GL_TEXTURE_2D, textures[1]);
 
     glEnable(GL_DEPTH_TEST);
+    const float radius = 10.0f;
 
-    while (!processInput(shader))
+    while (!processInput(shader, camera))
     {
         // clear screen
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        Uint64 ticks = SDL_GetTicks64();
+        float currentFrame = SDL_GetTicks64() / 100.0f;
 
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
 
         // float offset = sin(ticks / 1000.0f) / 2.0f;
         // GLint vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
@@ -202,6 +217,8 @@ int main()
         // glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
         // model = glm::rotate(model, glm::radians(0.5f), glm::vec3(0.5f, 1.0f, 0.0f));
         // shader.setMat4("model", model);
+        shader.setMat4("view", camera.GetViewMatrix());
+        shader.setMat4("projection", glm::perspective(glm::radians(fov), 800.0f / 600.0f, 0.1f, 100.0f));
 
         glBindVertexArray(VAO[0]);
 
@@ -211,7 +228,7 @@ int main()
             float angle = 20.0f * i;
             // model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
             if (i % 3 == 0) {
-                model = glm::rotate(model, glm::radians(ticks / 10.0f), glm::vec3(1.0f, 0.3f, 0.5f));
+                model = glm::rotate(model, glm::radians(currentFrame * 10.0f), glm::vec3(1.0f, 0.3f, 0.5f));
             }
             shader.setMat4("model", model);
 
@@ -243,11 +260,12 @@ int main()
     return 0;
 }
 
-bool processInput(const Shader& shader)
+bool processInput(const Shader& shader, Camera& camera)
 {
     SDL_Event e;
     bool quit = false;
     GLfloat mix;
+    float cameraSpeed = 2.5f * deltaTime;
 
     while(SDL_PollEvent(&e))
     {
@@ -260,14 +278,34 @@ bool processInput(const Shader& shader)
                     case SDLK_ESCAPE:
                         quit = true;
                         break;
-                    case SDLK_UP:
+                    case SDLK_PAGEUP:
                         shader.setFloat("mixPercentage", mix >= 1.0 ? 1.0 : mix + 0.1);
                         break;
-                    case SDLK_DOWN:
+                    case SDLK_PAGEDOWN:
                         shader.setFloat("mixPercentage", mix <= 0.1 ? 0.0 : mix - 0.1);
+                        break;
+                    case SDLK_w:
+                        camera.ProcessKeyboard(Camera_Movement::FORWARD, deltaTime);
+                        break;
+                    case SDLK_a:
+                        camera.ProcessKeyboard(Camera_Movement::LEFT, deltaTime);
+                        break;
+                    case SDLK_s:
+                        camera.ProcessKeyboard(Camera_Movement::BACKWARD, deltaTime);
+                        break;
+                    case SDLK_d:
+                        camera.ProcessKeyboard(Camera_Movement::RIGHT, deltaTime);
                         break;
                 }
                 break;
+            case SDL_MOUSEMOTION: {
+                camera.ProcessMouseMovement(e.motion.xrel, e.motion.yrel);
+                break;
+            }
+            case SDL_MOUSEWHEEL: {
+                camera.ProcessMouseScroll(e.wheel.y);
+                break;
+            }
             case SDL_QUIT:
                 quit = true;
                 break;
