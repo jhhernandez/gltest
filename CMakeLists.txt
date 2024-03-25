@@ -19,18 +19,13 @@ endif (USE_CLANG)
 
 list(APPEND CMAKE_CXX_FLAGS "-std=c++20")
 
-find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
-find_package(SDL2 REQUIRED CONFIG COMPONENTS SDL2main)
+find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3)
 find_package(GLEW REQUIRED)
 include_directories(${GLEW_INCLUDE_DIRS})
 link_libraries(${GLEW_LIBRARIES})
 
 add_executable(gl main.cpp)
 
-if (TARGET SDL2::SDL2main)
-    target_link_libraries(gl PRIVATE SDL2::SDL2main)
-endif ()
-
-target_link_libraries(gl PRIVATE SDL2::SDL2 GL)
+target_link_libraries(gl PRIVATE SDL3::SDL3 GL)
 
 install(TARGETS gl RUNTIME DESTINATION bin)

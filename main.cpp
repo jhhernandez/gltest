@@ -3,9 +3,9 @@
 #include <iostream>
 #include <string>
 
-#include <SDL2/SDL_video.h>
-#include <SDL2/SDL_events.h>
-#include <SDL2/SDL.h>
+#include <SDL3/SDL_video.h>
+#include <SDL3/SDL_events.h>
+#include <SDL3/SDL.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -54,14 +54,7 @@ int main()
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
-    window = SDL_CreateWindow(
-        TITLE,
-        SDL_WINDOWPOS_UNDEFINED,
-        SDL_WINDOWPOS_UNDEFINED,
-        width,
-        height,
-        SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL
-    );
+    window = SDL_CreateWindow(TITLE, width, height, SDL_WINDOW_OPENGL);
 
     if (window == nullptr)
     {
@@ -197,7 +190,7 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        float currentFrame = SDL_GetTicks64() / 100.0f;
+        float currentFrame = SDL_GetTicks() / 100.0f;
 
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
@@ -265,7 +258,6 @@ bool processInput(const Shader& shader, Camera& camera)
     SDL_Event e;
     bool quit = false;
     GLfloat mix;
-    float cameraSpeed = 2.5f * deltaTime;
 
     while(SDL_PollEvent(&e))
     {
@@ -273,7 +265,7 @@ bool processInput(const Shader& shader, Camera& camera)
 
         switch (e.type)
         {
-            case SDL_KEYDOWN:
+            case SDL_EVENT_KEY_DOWN:
                 switch (e.key.keysym.sym) {
                     case SDLK_ESCAPE:
                         quit = true;
@@ -298,15 +290,15 @@ bool processInput(const Shader& shader, Camera& camera)
                         break;
                 }
                 break;
-            case SDL_MOUSEMOTION: {
+            case SDL_EVENT_MOUSE_MOTION: {
                 camera.ProcessMouseMovement(e.motion.xrel, e.motion.yrel);
                 break;
             }
-            case SDL_MOUSEWHEEL: {
+            case SDL_EVENT_MOUSE_WHEEL: {
                 camera.ProcessMouseScroll(e.wheel.y);
                 break;
             }
-            case SDL_QUIT:
+            case SDL_EVENT_QUIT:
                 quit = true;
                 break;
         }
