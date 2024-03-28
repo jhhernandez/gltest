@@ -211,7 +211,7 @@ int main()
         // model = glm::rotate(model, glm::radians(0.5f), glm::vec3(0.5f, 1.0f, 0.0f));
         // shader.setMat4("model", model);
         shader.setMat4("view", camera.GetViewMatrix());
-        shader.setMat4("projection", glm::perspective(glm::radians(fov), 800.0f / 600.0f, 0.1f, 100.0f));
+        shader.setMat4("projection", glm::perspective(glm::radians(camera.Zoom), 800.0f / 600.0f, 0.1f, 100.0f));
 
         glBindVertexArray(VAO[0]);
 
@@ -287,6 +287,9 @@ bool processInput(const Shader& shader, Camera& camera)
                         break;
                     case SDLK_d:
                         camera.ProcessKeyboard(Camera_Movement::RIGHT, deltaTime);
+                        break;
+                    case SDLK_g:
+                        camera.toggleGodMode();
                         break;
                 }
                 break;

@@ -41,6 +41,7 @@ public:
     float MovementSpeed;
     float MouseSensitivity;
     float Zoom;
+    bool godMode;
 
     // constructor with vectors
     Camera(
@@ -52,7 +53,8 @@ public:
       Front(glm::vec3(0.0f, 0.0f, -1.0f)),
       MovementSpeed(SPEED),
       MouseSensitivity(SENSITIVITY),
-      Zoom(ZOOM)
+      Zoom(ZOOM),
+      godMode(false)
     {
         Position = position;
         WorldUp = up;
@@ -74,7 +76,8 @@ public:
       Front(glm::vec3(0.0f, 0.0f, -1.0f)),
       MovementSpeed(SPEED),
       MouseSensitivity(SENSITIVITY),
-      Zoom(ZOOM)
+      Zoom(ZOOM),
+      godMode(false)
     {
         Position = glm::vec3(posX, posY, posZ);
         WorldUp = glm::vec3(upX, upY, upZ);
@@ -97,16 +100,24 @@ public:
 
         switch(direction) {
           case FORWARD:
-            Position += Front * velocity;
+            Position += godMode
+              ? Front * velocity
+              : glm::vec3(Front.x, 0.0f, Front.z) * velocity;
             break;
           case BACKWARD:
-            Position -= Front * velocity;
+            Position -= godMode
+              ? Front * velocity
+              : glm::vec3(Front.x, 0.0f, Front.z) * velocity;
             break;
           case LEFT:
-            Position -= Right * velocity;
+            Position -= godMode
+              ? Right * velocity
+              : glm::vec3(Right.x, 0.0f, Right.z) * velocity;
             break;
           case RIGHT:
-            Position += Right * velocity;
+            Position += godMode
+              ? Right * velocity
+              : glm::vec3(Right.x, 0.0f, Right.z) * velocity;
             break;
         }
     }
@@ -134,9 +145,13 @@ public:
     // processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
     void ProcessMouseScroll(float yoffset)
     {
-        Zoom -= (float)yoffset;
+        Zoom -= yoffset;
         if (Zoom < 1.0f) Zoom = 1.0f;
         if (Zoom > 45.0f) Zoom = 45.0f;
+    }
+
+    void toggleGodMode() {
+      godMode = !godMode;
     }
 
 private:
@@ -144,15 +159,19 @@ private:
     void updateCameraVectors()
     {
         // calculate the new Front vector
-        glm::vec3 front;
-        front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-        front.y = sin(glm::radians(Pitch));
-        front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-        Front = glm::normalize(front);
+        glm::vec3 front(
+          cos(glm::radians(Yaw)) * cos(glm::radians(Pitch)),
+          sin(glm::radians(Pitch)),
+          sin(glm::radians(Yaw)) * cos(glm::radians(Pitch))
+        );
+        /*
+         * normalize the vectors, because their length gets closer
+         * to 0 the more you look up or down which results in slower movement.
+         */
         // also re-calculate the Right and Up vector
-        Right = glm::normalize(glm::cross(Front, WorldUp));  // normalize the vectors, because their length gets closer
-        Up    = glm::normalize(glm::cross(Right, Front));    // to 0 the more you look up or down which results in
-                                                             // slower movement.
+        Front = glm::normalize(front);
+        Right = glm::normalize(glm::cross(Front, WorldUp));
+        Up    = glm::normalize(glm::cross(Right, Front));
     }
 };
 
